@@ -1,12 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe 'Task', type: :system do
+  # == let!で前処理化==
+  let!(:project){ FactoryBot.create(:project) }
+  let!(:task){ FactoryBot.create(:task, project_id: project.id) }
+  # ===
   describe 'Task一覧' do
     context '正常系' do
       it '一覧ページにアクセスした場合、Taskが表示されること' do
         # TODO: ローカル変数ではなく let を使用してください
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id)
         visit project_tasks_path(project)
         expect(page).to have_content task.title
         expect(Task.count).to eq 1
@@ -15,8 +17,6 @@ RSpec.describe 'Task', type: :system do
       
       it 'Project詳細からTask一覧ページにアクセスした場合、Taskが表示されること' do
         # FIXME: テストが失敗するので修正してください
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id)
         visit project_path(project)
         sleep 3
         click_on "View Todos"
@@ -44,14 +44,16 @@ RSpec.describe 'Task', type: :system do
     context '正常系' do
       it 'Taskが新規作成されること' do
         # TODO: ローカル変数ではなく let を使用してください
-        project = FactoryBot.create(:project)
         visit project_tasks_path(project)
         click_link 'New Task'
         fill_in 'Title', with: 'test'
         click_button 'Create Task'
         expect(page).to have_content('Task was successfully created.')
-        expect(Task.count).to eq 1
-        expect(current_path).to eq '/projects/1/tasks/1'
+        expect(Task.count).to eq 2
+        # == let!の前処理でtaskレコード予め1つあり＋１つ新規作成で2個になる ==
+        expect(current_path).to eq '/projects/1/tasks/2'
+        # == 詳細画面のtask_idを修正 ==
+        # == id:1 → id:2 ==
       end
     end
   end
@@ -60,8 +62,6 @@ RSpec.describe 'Task', type: :system do
     context '正常系' do
       it 'Taskが表示されること' do
         # TODO: ローカル変数ではなく let を使用してください
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id)
         visit project_task_path(project, task)
         expect(page).to have_content(task.title)
         expect(page).to have_content(task.status)
@@ -75,8 +75,6 @@ RSpec.describe 'Task', type: :system do
     context '正常系' do
       it 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
         # FIXME: テストが失敗するので修正してください
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id)
         visit edit_project_task_path(project, task)
         sleep 3
         fill_in 'Deadline', with: Time.current
@@ -101,14 +99,15 @@ RSpec.describe 'Task', type: :system do
         expect(page).to have_content(Time.current.strftime('%Y-%m-%d'))
         expect(current_path).to eq project_task_path(project, task)
       end
-
+      
+      let!(:task) { create(:task, :done, project_id: project.id) }
       it '既にステータスが完了のタスクのステータスを変更した場合、Taskの完了日が更新されないこと' do
         # TODO: FactoryBotのtraitを利用してください
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id, status: :done, completion_date: Time.current.yesterday)
         visit edit_project_task_path(project, task)
+        sleep 2
         select 'todo', from: 'Status'
         click_button 'Update Task'
+        sleep 2
         expect(page).to have_content('todo')
         expect(page).not_to have_content(Time.current.strftime('%Y-%m-%d'))
         expect(current_path).to eq project_task_path(project, task)
@@ -119,9 +118,7 @@ RSpec.describe 'Task', type: :system do
   describe 'Task削除' do
     context '正常系' do
       # FIXME: テストが失敗するので修正してください
-      fit 'Taskが削除されること' do
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id)
+      it 'Taskが削除されること' do
         visit project_tasks_path(project)
         sleep 2
         click_link 'Destroy'
