@@ -73,7 +73,7 @@ RSpec.describe 'Task', type: :system do
 
   describe 'Task編集' do
     context '正常系' do
-      fit 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
+      it 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
         # FIXME: テストが失敗するので修正してください
         project = FactoryBot.create(:project)
         task = FactoryBot.create(:task, project_id: project.id)
@@ -119,13 +119,21 @@ RSpec.describe 'Task', type: :system do
   describe 'Task削除' do
     context '正常系' do
       # FIXME: テストが失敗するので修正してください
-      xit 'Taskが削除されること' do
+      fit 'Taskが削除されること' do
         project = FactoryBot.create(:project)
         task = FactoryBot.create(:task, project_id: project.id)
         visit project_tasks_path(project)
+        sleep 2
         click_link 'Destroy'
+        sleep 2
         page.driver.browser.switch_to.alert.accept
-        expect(page).not_to have_content task.title
+        sleep 2
+        # expect(page).not_to have_content task.title
+        # == 「ではない」ことを検証するのは範囲が広すぎる ==
+        # == 特定の文言を対象とするテスト検証に変更 ==
+        # == 削除成功のメッセージと重複（`Title`が含まれている） ==
+        expect(page).not_to have_content task.title 
+        expect(page).to have_content `Task was successfully destroyed`
         expect(Task.count).to eq 0
         expect(current_path).to eq project_tasks_path(project)
       end
