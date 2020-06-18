@@ -12,16 +12,30 @@ RSpec.describe 'Task', type: :system do
         expect(Task.count).to eq 1
         expect(current_path).to eq project_tasks_path(project)
       end
-
+      
       fit 'Project詳細からTask一覧ページにアクセスした場合、Taskが表示されること' do
         # FIXME: テストが失敗するので修正してください
         project = FactoryBot.create(:project)
         task = FactoryBot.create(:task, project_id: project.id)
         visit project_path(project)
-        click_link 'View Todos'
-        expect(page).to have_content task.title
-        expect(Task.count).to eq 1
-        expect(current_path).to eq project_tasks_path(project)
+        sleep 3
+        click_on "View Todos"
+        sleep 3
+
+        # 最後に開いたタブを指定
+        within_window(windows.last) do
+          expect(page).to have_content task.title
+          expect(Task.count).to eq 1
+          expect(current_path).to eq project_tasks_path(project)
+        end
+
+        # == 修正前では何が起こっているか
+        # expect(page).to have_content project.name
+          # == project詳細ページへアクセスしているためprojectの名前が表示されている ==
+        # expect(Task.count).to eq 1
+        # expect(current_path).to eq project_path(project)
+         # == Task一覧画面を表示すべきところを、project詳細画面へアクセスしている ==
+        # ==
       end
     end
   end
