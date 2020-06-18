@@ -13,7 +13,7 @@ RSpec.describe 'Task', type: :system do
         expect(current_path).to eq project_tasks_path(project)
       end
       
-      fit 'Project詳細からTask一覧ページにアクセスした場合、Taskが表示されること' do
+      it 'Project詳細からTask一覧ページにアクセスした場合、Taskが表示されること' do
         # FIXME: テストが失敗するので修正してください
         project = FactoryBot.create(:project)
         task = FactoryBot.create(:task, project_id: project.id)
@@ -73,15 +73,20 @@ RSpec.describe 'Task', type: :system do
 
   describe 'Task編集' do
     context '正常系' do
-      xit 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
+      fit 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
         # FIXME: テストが失敗するので修正してください
         project = FactoryBot.create(:project)
         task = FactoryBot.create(:task, project_id: project.id)
         visit edit_project_task_path(project, task)
+        sleep 3
         fill_in 'Deadline', with: Time.current
+        sleep 2
         click_button 'Update Task'
+        sleep 2
         click_link 'Back'
-        expect(find('.task_list')).to have_content(Time.current.strftime('%Y-%m-%d'))
+        sleep 2
+        expect(find('.task_list')).to have_content(Time.current.strftime('%-m/%d %-H:%M'))
+        # == 日付表記の検証部分を修正 ==
         expect(current_path).to eq project_tasks_path(project)
       end
 
