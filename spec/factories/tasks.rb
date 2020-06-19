@@ -9,5 +9,7 @@ FactoryBot.define do
     trait :done do
       status { 2 }
     end
+    
+    association :project, factory: :project
   end
 end
