@@ -4,6 +4,10 @@ RSpec.describe 'Task', type: :system do
   # == let!で前処理化==
   let!(:task){ FactoryBot.create(:task) }
   # ===
+
+  # === モジュールのshort_timeメソッドを使う ===
+  include ApplicationHelper
+  # ======
   describe 'Task一覧' do
     context '正常系' do
       it '一覧ページにアクセスした場合、Taskが表示されること' do
@@ -25,14 +29,6 @@ RSpec.describe 'Task', type: :system do
           expect(Task.count).to eq 1
           expect(current_path).to eq project_tasks_path(task)
         end
-
-        # == 修正前では何が起こっているか
-        # expect(page).to have_content project.name
-          # == project詳細ページへアクセスしているためprojectの名前が表示されている ==
-        # expect(Task.count).to eq 1
-        # expect(current_path).to eq project_path(project)
-         # == Task一覧画面を表示すべきところを、project詳細画面へアクセスしている ==
-        # ==
       end
     end
   end
@@ -59,26 +55,25 @@ RSpec.describe 'Task', type: :system do
     context '正常系' do
       it 'Taskが表示されること' do
         # TODO: ローカル変数ではなく let を使用してください
-        visit project_task_path(project, task)
+        visit project_tasks_path(task)
         expect(page).to have_content(task.title)
         expect(page).to have_content(task.status)
-        expect(page).to have_content(task.deadline.strftime('%Y-%m-%d %H:%M'))
-        expect(current_path).to eq project_task_path(project, task)
+        expect(page).to have_content(short_time(task.deadline))
+        expect(current_path).to eq project_tasks_path(task)
       end
     end
   end
 
   describe 'Task編集' do
     context '正常系' do
-      include ApplicationHelper
-      fit 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
+      it 'Taskを編集した場合、一覧画面で編集後の内容が表示されること' do
         # FIXME: テストが失敗するので修正してください
         visit edit_project_task_path(task, id: 1)
         fill_in 'Deadline', with: Time.current
         click_button 'Update Task'
         click_link 'Back'
         expect(page).to have_content(short_time(Time.current))
-        # == 日付表記の検証部分を修正 ==
+        # == short_timeメソッドを用いて検証 ==
         expect(current_path).to eq project_tasks_path(task)
       end
 
@@ -116,13 +111,8 @@ RSpec.describe 'Task', type: :system do
         visit project_tasks_path(task)
         click_link 'Destroy'
         page.driver.browser.switch_to.alert.accept
-        # expect(page).not_to have_content task.title
-        # == 「ではない」ことを検証するのは範囲が広すぎる ==
-        # == 特定の文言を対象とするテスト検証に変更 ==
-        # == 削除成功のメッセージと重複（`Title`が含まれている） ==
-        expect(page).not_to have_content task.title 
         expect(page).to have_content `Task was successfully destroyed`
-        expect(Task.count).to eq 0
+        expect{Task.find(1)}.to raise_exception(ActiveRecord::RecordNotFound)
         expect(current_path).to eq project_tasks_path(task)
       end
     end
