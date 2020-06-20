@@ -111,6 +111,7 @@ RSpec.describe 'Task', type: :system do
         visit project_tasks_path(task)
         click_link 'Destroy'
         page.driver.browser.switch_to.alert.accept
+        expect(page).to have_selector 'table', text: 'Title'
         expect(page).to have_content `Task was successfully destroyed`
         expect{Task.find(1)}.to raise_exception(ActiveRecord::RecordNotFound)
         expect(current_path).to eq project_tasks_path(task)
@@ -118,3 +119,4 @@ RSpec.describe 'Task', type: :system do
     end
   end
 end
+  
